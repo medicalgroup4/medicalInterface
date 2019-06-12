@@ -1,11 +1,12 @@
 import mysql.connector
+from PyQt5.QtWidgets import QMenu, QTableWidget, QTableWidgetItem
 
 
 class dbConnector:
     def __init__(self):
         self.db = mysql.connector.connect(
             host="51.83.42.157",
-            user="root",
+            user="remote",
             passwd="1234Hoedjevan!",
             database="medicaldb"
 )
@@ -17,3 +18,40 @@ class dbConnector:
         cursor.execute(sql, val)
         self.db.commit()
         print("Patient inserted")
+
+    def getPatients(self):
+        menu = QMenu()
+        cursor = self.db.cursor()
+        cursor.execute("SELECT Name FROM Patients")
+        myresult = cursor.fetchall()
+        for patient in myresult:
+            menu.addAction(''.join(patient))
+
+        return menu
+
+    def getMessages(self):
+        table = QTableWidget()
+        table.setColumnCount(6)
+        table.setHorizontalHeaderLabels(['id', 'patient_id', 'severity', 'message', 'location', 'confirmed'])
+        table.setColumnWidth(0, 30)
+        table.setColumnWidth(1, 80)
+        table.setColumnWidth(2, 60)
+        table.setColumnWidth(3, 240)
+        table.setColumnWidth(4, 60)
+        table.setColumnWidth(5, 80)
+
+        cursor = self.db.cursor()
+        cursor.execute("SELECT * FROM Messages")
+        myresult = cursor.fetchall()
+        for message in myresult:
+            rowPosition = table.rowCount()
+            table.insertRow(rowPosition)
+            table.setItem(rowPosition, 0, QTableWidgetItem(str(message[0])))
+            table.setItem(rowPosition, 1, QTableWidgetItem(str(message[1])))
+            table.setItem(rowPosition, 2, QTableWidgetItem(str(message[2])))
+            table.setItem(rowPosition, 3, QTableWidgetItem(message[3]))
+            table.setItem(rowPosition, 4, QTableWidgetItem(message[4]))
+            table.setItem(rowPosition, 5, QTableWidgetItem(str(message[5])))
+
+        return table
+
