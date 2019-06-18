@@ -22,13 +22,28 @@ class dbConnector:
         print("Patient inserted")
 
     def getPatients(self):
-        self.menu = QMenu()
         cursor = self.db.cursor()
         cursor.execute("SELECT Name FROM Patients")
         myresult = cursor.fetchall()
+
+        patient_list = []
+
         print(myresult)
         for patient in myresult:
-            self.menu.addAction(''.join(patient))
+            patient_list.append(''.join(patient))
+
+        return patient_list
+
+    def getPatient(self, p):
+        cursor = self.db.cursor()
+        cursor.execute("SELECT id FROM Patients WHERE name = " + "'" + p + "'")
+        id = cursor.fetchone()
+
+        cursor.execute("SELECT room FROM Patients WHERE name = " + "'" + p + "'")
+        room = cursor.fetchone()
+
+        data = [id[0], room[0]]
+        return data
 
     def getMessages(self, pname):
         table = QTableWidget()

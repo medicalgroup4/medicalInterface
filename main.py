@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QAction, QMenu, QApplication, QLabel, QWidget, QPushButton, QGridLayout, QLineEdit, QMessageBox, QLayoutItem
+from PyQt5.QtWidgets import QAction, QMenu, QApplication, QLabel, QWidget, QPushButton, QGridLayout, QLineEdit, QMessageBox, QLayoutItem, QComboBox
 from PyQt5 import QtCore
 from dbConnector import *
 
@@ -7,9 +7,9 @@ btnAddPatient = QPushButton('Add patient')
 tbPatientName = QLineEdit('Patient name')
 tbPatientRoom = QLineEdit('Room')
 btnRefresh = QPushButton('Refresh')
-menu = QMenu()
+cbPatients = QComboBox()
 table = QTableWidget()
-
+seltable = QTableWidget()
 window = QWidget()
 layout = QGridLayout()
 
@@ -18,7 +18,7 @@ def init(pname):
     print('Initializing')
     conn = dbConnector()
 
-    global menu
+    global seltable
 
     # Add patient section
     layout.addWidget(tbPatientName, 0, 0)
@@ -29,13 +29,15 @@ def init(pname):
     layout.addWidget(btnRefresh, 0, 2)
 
     # Get patients section
-    conn.getPatients()
-    menu = conn.menu
-    layout.addWidget(menu, 2, 0)
+    if pname is None:
+        patients = conn.getPatients()
+        cbPatients.clear()
+        cbPatients.addItems(patients)
+        layout.addWidget(cbPatients, 2, 0)
 
     # Get messages section
     table1 = conn.getMessages(pname)
-    layout.addWidget(table1, 2, 1)
+    layout.addWidget(table1, 2, 1, 3, 1)
 
     window.setLayout(layout)
 
@@ -61,11 +63,10 @@ def on_refresh_clicked():
     init(None)
 
 
-#@QtCore.pyqtSlot(QAction)
 def on_patient_clicked(action):
-    name = action.text()
-    print(name)
-    init(name)
+    conn = dbConnector()
+    patient = cbPatients.itemText(action)
+    init(patient)
 
 
 init(None)
@@ -74,7 +75,7 @@ window.show()
 
 btnAddPatient.clicked.connect(on_addpatient_clicked)
 btnRefresh.clicked.connect(on_refresh_clicked)
-menu.triggered.connect(on_patient_clicked)
+cbPatients.currentIndexChanged.connect(on_patient_clicked)
 
 app.exec()
 
