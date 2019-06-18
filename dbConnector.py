@@ -1,9 +1,11 @@
 import mysql.connector
-from PyQt5.QtWidgets import QMenu, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QAction, QMenu, QTableWidget, QTableWidgetItem
 
 
 class dbConnector:
     def __init__(self):
+
+        self.menu = QMenu()
         self.db = mysql.connector.connect(
             host="51.83.42.157",
             user="remote",
@@ -20,16 +22,15 @@ class dbConnector:
         print("Patient inserted")
 
     def getPatients(self):
-        menu = QMenu()
+        self.menu = QMenu()
         cursor = self.db.cursor()
         cursor.execute("SELECT Name FROM Patients")
         myresult = cursor.fetchall()
+        print(myresult)
         for patient in myresult:
-            menu.addAction(''.join(patient))
+            self.menu.addAction(''.join(patient))
 
-        return menu
-
-    def getMessages(self):
+    def getMessages(self, pname):
         table = QTableWidget()
         table.setColumnCount(6)
         table.setHorizontalHeaderLabels(['id', 'patient_id', 'severity', 'message', 'location', 'confirmed'])
@@ -41,8 +42,22 @@ class dbConnector:
         table.setColumnWidth(5, 80)
 
         cursor = self.db.cursor()
-        cursor.execute("SELECT * FROM Messages")
+
+        if pname is None:
+            cursor.execute("SELECT * FROM Messages")
+
+        else:
+            cursor.execute("SELECT id FROM Patients WHERE name = " + "'" + pname + "'")
+            p_id = cursor.fetchone()
+            string_id = str(p_id)
+            string_id = string_id.replace('(', '')
+            string_id = string_id.replace(')', '')
+            string_id = string_id.replace(',', '')
+
+            cursor.execute("SELECT * FROM Messages WHERE patient_id = " + "'" + string_id + "'")
+
         myresult = cursor.fetchall()
+
         for message in myresult:
             rowPosition = table.rowCount()
             table.insertRow(rowPosition)

@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QMenu, QApplication, QLabel, QWidget, QPushButton, QGridLayout, QLineEdit, QMessageBox, QLayoutItem
+from PyQt5.QtWidgets import QAction, QMenu, QApplication, QLabel, QWidget, QPushButton, QGridLayout, QLineEdit, QMessageBox, QLayoutItem
+from PyQt5 import QtCore
 from dbConnector import *
 
 app = QApplication([])
@@ -6,14 +7,18 @@ btnAddPatient = QPushButton('Add patient')
 tbPatientName = QLineEdit('Patient name')
 tbPatientRoom = QLineEdit('Room')
 btnRefresh = QPushButton('Refresh')
+menu = QMenu()
+table = QTableWidget()
 
 window = QWidget()
 layout = QGridLayout()
 
 
-def init():
-
+def init(pname):
+    print('Initializing')
     conn = dbConnector()
+
+    global menu
 
     # Add patient section
     layout.addWidget(tbPatientName, 0, 0)
@@ -24,20 +29,22 @@ def init():
     layout.addWidget(btnRefresh, 0, 2)
 
     # Get patients section
-    patientsMenu = conn.getPatients()
-    layout.addWidget(patientsMenu, 2, 0)
+    conn.getPatients()
+    menu = conn.menu
+    layout.addWidget(menu, 2, 0)
 
-    # Get Messages section
-    table = conn.getMessages()
-    layout.addWidget(table, 2, 1)
+    # Get messages section
+    table1 = conn.getMessages(pname)
+    layout.addWidget(table1, 2, 1)
 
     window.setLayout(layout)
 
+    print("Init Done")
 
-def update():
+
+def clear():
     for i in reversed(range(layout.count())):
         layout.itemAt(i).widget().setParent(None)
-    init()
 
 
 def on_addpatient_clicked():
@@ -45,18 +52,29 @@ def on_addpatient_clicked():
     conn.addPatient(tbPatientName.text(), tbPatientRoom.text())
     alert = QMessageBox()
     alert.setText('Patient added')
-    update()
+    clear()
+    init(None)
     alert.exec_()
 
 
 def on_refresh_clicked():
-    update()
+    init(None)
 
 
-init()
-window.showFullScreen()
+#@QtCore.pyqtSlot(QAction)
+def on_patient_clicked(action):
+    name = action.text()
+    print(name)
+    init(name)
+
+
+init(None)
+window.setLayout(layout)
+window.show()
+
 btnAddPatient.clicked.connect(on_addpatient_clicked)
 btnRefresh.clicked.connect(on_refresh_clicked)
+menu.triggered.connect(on_patient_clicked)
 
 app.exec()
 
